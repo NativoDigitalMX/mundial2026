@@ -1,0 +1,32 @@
+.progressContainer {
+  height: 0.5rem;
+  background-color: #f3f4f6;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(to right, #10b981, #3b82f6, #7c3aed);
+  transition: width 0.3s ease;
+  border-radius: 9999px;
+  width: 0%; /* Valor por defecto, se sobrescribe con JS */
+}
+
+.progress-fill {
+  background: linear-gradient(to right, #10b981, #3b82f6);
+  transition: width 0.3s ease;
+}
+/* Breakpoint personalizado para pantallas pequeñas */
+
+/* Opcional: Mejoras para la barra de progreso en móvil */
+@media (max-width: 640px) {
+  .progressContainer {
+    height: 0.375rem; /* Un poco más delgada en móvil */
+  }
+}
+
+/* Opcional: Animación suave para cambios de grupo */
+.progressBar {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
