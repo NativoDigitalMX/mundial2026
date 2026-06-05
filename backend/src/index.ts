@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3001;
 const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:8080',
-    process.env.FRONTEND_URL || 'http://192.168.1.100:8080'  // Valor por defecto
+    process.env.FRONTEND_URL || 'https://mundial2026-pink.vercel.app'
 ];
 
 
