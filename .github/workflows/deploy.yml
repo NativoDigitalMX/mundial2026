@@ -1,0 +1,52 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+        env:
+          VITE_API_URL: https://timbaloonatica.com
+          VITE_ADMIN_USERCODE: ${{ secrets.VITE_ADMIN_USERCODE }}
+          VITE_ADMIN_PASSWORD: ${{ secrets.VITE_ADMIN_PASSWORD }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/ubuntu/mundial2026
+            git pull origin main
+            sudo docker-compose down
+            sudo docker-compose up -d --build
+            sudo docker-compose restart nginx
+
+      - name: Copy frontend dist to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "frontend/dist/*"
+          target: "/home/ubuntu/mundial2026/frontend/dist"
+          strip_components: 2
