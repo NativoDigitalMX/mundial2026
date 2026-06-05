@@ -9,7 +9,7 @@ services:
       MYSQL_USER: mundial_user
       MYSQL_PASSWORD: mundial_pass
     ports:
-      - "3307:3306"  # Usamos 3307 para no conflictar con XAMPP
+      - "3308:3306"  # Usamos 3308 para no conflictar con XAMPP
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -36,9 +36,9 @@ services:
       NODE_ENV: production
     ports:
       - "3001:3001"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+    # volumes:
+    #   - ./backend:/app
+    #   - /app/node_modules
   nginx:
     image: nginx:alpine
     container_name: mundial2026-nginx
