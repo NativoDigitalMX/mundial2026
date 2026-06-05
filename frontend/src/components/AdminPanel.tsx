@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : 'http://localhost:3001/api';
 import AdminUsers from './AdminUsers';
 import AdminRanking from './AdminRanking';
 
@@ -64,7 +68,7 @@ const AdminDashboard = () => {
         const loadStats = async () => {
             try {
                 const token = sessionStorage.getItem('token');
-                const response = await fetch('/api/admin/stats', {
+                const response = await fetch(`${API_BASE_URL}/admin/stats`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 

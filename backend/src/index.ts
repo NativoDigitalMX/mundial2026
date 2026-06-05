@@ -14,9 +14,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:8080',
-    process.env.FRONTEND_URL || 'https://mundial2026-pink.vercel.app'
+    /^http:\/\/localhost(:\d+)?$/,
+    /^https:\/\/localhost(:\d+)?$/,
+    process.env.FRONTEND_URL || 'https://mundial2026-pink.vercel.app',
+    'https://timbaloonatica.com',
+    'https://www.timbaloonatica.com'
 ];
 
 

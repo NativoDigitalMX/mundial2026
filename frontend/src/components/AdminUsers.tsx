@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : 'http://localhost:3001/api';
 import { exportSimpleTableToPDF } from '../utils/pdfExporter';
 interface User {
     id: number;
@@ -42,7 +46,7 @@ const AdminUsers: React.FC = () => {
                 return;
             }
 
-            const response = await fetch('/api/admin/users', {
+            const response = await fetch(`${API_BASE_URL}/admin/users`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -82,8 +86,8 @@ const AdminUsers: React.FC = () => {
         try {
             const token = sessionStorage.getItem('token');
             const url = editingUser
-                ? `/api/admin/users/${editingUser.id}`
-                : '/api/admin/users';
+                ? `${API_BASE_URL}/admin/users/${editingUser.id}`
+                : `${API_BASE_URL}/admin/users`;
 
             const method = editingUser ? 'PUT' : 'POST';
 
@@ -138,7 +142,7 @@ const AdminUsers: React.FC = () => {
             const token = sessionStorage.getItem('token');
 
             // PRIMERO: Intentar eliminar directamente
-            const deleteResponse = await fetch(`/api/admin/users/${userId}`, {
+            const deleteResponse = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -164,7 +168,7 @@ const AdminUsers: React.FC = () => {
                 if (!confirmDelete) return;
 
                 // Segunda llamada para eliminar con predicciones
-                const deleteWithPredictionsResponse = await fetch(`/api/admin/users/${userId}`, {
+                const deleteWithPredictionsResponse = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -510,7 +514,7 @@ const AdminUsers: React.FC = () => {
     const hasPrediction = async (userId: number) => {
         try {
             const token = sessionStorage.getItem('token');
-            const response = await fetch(`/api/admin/users/${userId}/prediction`, {
+            const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/prediction`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -544,7 +548,7 @@ const AdminUsers: React.FC = () => {
         try {
             const token = sessionStorage.getItem('token');
 
-            const response = await fetch(`/api/admin/users/${userId}/prediction`, {
+            const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/prediction`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
