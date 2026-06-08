@@ -11,6 +11,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import ClearIcon from '@mui/icons-material/Clear';
 import { REAL_TEAMS } from '../data/teams';
 import { Link } from 'react-router-dom';
+// Modificacion para reporte PDF
+import { generateFullReportPDF } from '../utils/generateFullReportPDF';
 
 interface PhaseResult {
     stage: string;
@@ -210,7 +212,66 @@ const AdminResults: React.FC = () => {
             showSnackbar('Error recalculando puntos', 'error');
         }
     };
+//  Modificacion para reporte PDF
 
+    const handleGenerateFullReport = async () => {
+        setLoading(true);
+        try {
+            const token = sessionStorage.getItem('token');
+
+            // 1. Obtener todos los usuarios
+            const usersResponse = await fetch('/api/admin/users', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const usersResult = await usersResponse.json();
+            const allUsers = usersResult.users || [];
+
+            // 2. Obtener predicción INDIVIDUAL para cada usuario (usando endpoint que funciona)
+            const reportData: any[] = [];
+
+            for (const user of allUsers) {
+                try {
+                    const predResponse = await fetch(`/api/admin/users/${user.id}/prediction`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (predResponse.ok) {
+                        const predResult = await predResponse.json();
+                        const prediction = predResult.prediction;
+
+                        // Verificar que tenga los 32 equipos (completa)
+                        if (prediction?.qualified_teams?.length === 32) {
+                            reportData.push({
+                                user_code: user.user_code,
+                                qualified_teams: prediction.qualified_teams,
+                                knockout_predictions: prediction.knockout_predictions
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Error obteniendo predicción para ${user.user_code}:`, err);
+                }
+            }
+
+            reportData.sort((a, b) => a.user_code.localeCompare(b.user_code));
+
+            if (reportData.length === 0) {
+                showSnackbar('No hay predicciones completadas para generar el reporte', 'warning');
+                setLoading(false);
+                return;
+            }
+
+            // 3. Generar PDF
+            await generateFullReportPDF(reportData);
+
+            showSnackbar('PDF generado exitosamente', 'success');
+        } catch (error: any) {
+            console.error('Error generando reporte:', error);
+            showSnackbar('Error al generar el PDF', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
     const [phaseValidation, setPhaseValidation] = useState<{
         stage: string;
         phase_number: number;
@@ -334,6 +395,8 @@ return (
                                     <Tab label="Ingresar Resultados Reales" />
                                     <Tab label="Reporte de Predicciones" />
                                     <Tab label="Validación de Fases" />
+                                     {/* Modificacion para reporte PDF: */}
+                                    <Tab label="📊 Resumen General" />  {/* 👈 Agregar esta línea */}
                                 </Tabs>
                             </Paper>
                             {activeTab === 0 && (
@@ -357,10 +420,10 @@ return (
                                                         scrollButtons="auto"
                                                     >
                                                         <Tab label="Grupos " value="group" />
-                                                        <Tab label="Octavos" value="roundOf16" />
-                                                        <Tab label="Cuartos" value="quarterFinals" />
-                                                        <Tab label="Semifinales" value="semiFinals" />
-                                                        <Tab label="Final" value="final" />
+                                                        <Tab label="DIECISEISAVOS" value="roundOf16" />
+                                                        <Tab label="OCTAVOS" value="quarterFinals" />
+                                                        <Tab label="CUARTOS" value="semiFinals" />
+                                                        <Tab label="SEMIS" value="final" />
                                                         <Tab label="Campeón" value="champion" />
                                                     </Tabs>
                                                 </Box>
@@ -378,10 +441,10 @@ return (
                                                     <Box>
                                                         <Typography variant="subtitle2">
                                                             {selectedStage === 'group' ? 'Fase de Grupos' :
-                                                                selectedStage === 'roundOf16' ? 'Octavos de Final' :
-                                                                    selectedStage === 'quarterFinals' ? 'Cuartos de Final' :
-                                                                        selectedStage === 'semiFinals' ? 'Semifinales' :
-                                                                            selectedStage === 'final' ? 'Final' : 'Campeón'}
+                                                                selectedStage === 'roundOf16' ? 'Dieciseisavos de Final' :
+                                                                    selectedStage === 'quarterFinals' ? 'Octavos de Final' :
+                                                                        selectedStage === 'semiFinals' ? 'Cuartos de Final' :
+                                                                            selectedStage === 'final' ? 'Semifinales' : 'Campeón'}
                                                         </Typography>
                                                         <Typography variant="body2" color="text.secondary">
                                                             Selecciona los {getExpectedCount(selectedStage)} equipos clasificados
@@ -648,7 +711,7 @@ return (
                                                                 maxWidth: 150
                                                             }}
                                                         >
-                                                            🏆 Ronda de 32
+                                                            🏆 Grupos
                                                         </TableCell>
                                                         {allPredictions.map((pred) => (
                                                             <TableCell key={pred.id} align="center" sx={{ width: 50, minWidth: 50, maxWidth: 50, padding: '8px 4px' }}>
@@ -679,7 +742,7 @@ return (
                                                                 maxWidth: 150
                                                             }}
                                                         >
-                                                            ⚽ Octavos
+                                                            ⚽ Dieciseisavos
                                                         </TableCell>
                                                         {allPredictions.map((pred) => (
                                                             <TableCell key={pred.id} align="center" sx={{ width: 50, minWidth: 50, maxWidth: 50, padding: '8px 4px' }}>
@@ -710,7 +773,7 @@ return (
                                                                 maxWidth: 150
                                                             }}
                                                         >
-                                                            🎯 Cuartos
+                                                            🎯 Octavos
                                                         </TableCell>
                                                         {allPredictions.map((pred) => (
                                                             <TableCell key={pred.id} align="center" sx={{ width: 50, minWidth: 50, maxWidth: 50, padding: '8px 4px' }}>
@@ -741,7 +804,7 @@ return (
                                                                 maxWidth: 150
                                                             }}
                                                         >
-                                                            🔥 Semifinales
+                                                            🔥 Cuartos
                                                         </TableCell>
                                                         {allPredictions.map((pred) => (
                                                             <TableCell key={pred.id} align="center" sx={{ width: 50, minWidth: 50, maxWidth: 50, padding: '8px 4px' }}>
@@ -772,7 +835,7 @@ return (
                                                                 maxWidth: 150
                                                             }}
                                                         >
-                                                            🥈 Final
+                                                            🥈 Semis
                                                         </TableCell>
                                                         {allPredictions.map((pred) => (
                                                             <TableCell key={pred.id} align="center" sx={{ width: 50, minWidth: 50, maxWidth: 50, padding: '8px 4px' }}>
@@ -884,15 +947,15 @@ return (
                                                     {phaseValidation.map((phase, idx) => (
                                                         <TableRow key={idx}>
                                                             <TableCell>
-                                                                <Typography variant="body2" fontWeight="bold">
+                                                                {/* <Typography variant="body2" fontWeight="bold">
                                                                     {phase.stage}
-                                                                </Typography>
+                                                                </Typography> */}
                                                                 <Typography variant="caption" color="text.secondary">
                                                                     {phase.stage === 'group' ? 'Fase de Grupos (32 equipos)' :
-                                                                        phase.stage === 'roundOf16' ? 'Octavos de Final (16 equipos)' :
-                                                                            phase.stage === 'quarterFinals' ? 'Cuartos de Final (8 equipos)' :
-                                                                                phase.stage === 'semiFinals' ? 'Semifinales (4 equipos)' :
-                                                                                    phase.stage === 'final' ? 'Final (2 equipos)' :
+                                                                        phase.stage === 'roundOf16' ? 'Dieciseisavos de Final (16 equipos)' :
+                                                                            phase.stage === 'quarterFinals' ? 'Octavos de Final (8 equipos)' :
+                                                                                phase.stage === 'semiFinals' ? 'Cuatos de Final (4 equipos)' :
+                                                                                    phase.stage === 'final' ? 'Semifinales (2 equipos)' :
                                                                                         'Campeón (1 equipo)'}
                                                                 </Typography>
                                                             </TableCell>
@@ -950,6 +1013,39 @@ return (
                                             }
                                         </Typography>
                                     </Box>
+                                </Box>
+                            )}
+                            {/* Modificacion para generar reporte PDF: */}
+                            {activeTab === 3 && (
+                                <Box sx={{ mt: 3 }}>
+                                    <Card>
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom>
+                                                📋 Resumen de todas las quinielas
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                                Genera un PDF con todas las predicciones de los usuarios:
+                                                <br />
+                                                • <strong>Página 1:</strong> Fase de Grupos - 32 equipos clasificados por usuario
+                                                <br />
+                                                • <strong>Página 2:</strong> Fase Knockout - 31 partidos (73 a 104)
+                                                <br />
+                                                <br />
+                                                Los usuarios aparecen ordenados alfabéticamente (AAA → ZZZ).
+                                            </Typography>
+
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={handleGenerateFullReport}
+                                                disabled={loading}
+                                                startIcon={<span>📄</span>}
+                                                sx={{ mt: 2 }}
+                                            >
+                                                Generar PDF - Resumen de Quinielas
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
                                 </Box>
                             )}
                             <Snackbar

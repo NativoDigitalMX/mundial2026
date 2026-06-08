@@ -225,3 +225,6 @@ UNLOCK TABLES;
 
 -- Dump completed on 2026-02-23 11:38:21
 
+-- Limpiar phase_results al iniciar
+TRUNCATE TABLE phase_results;
+

@@ -21,7 +21,7 @@ export interface RankingData {
 // Interfaz para datos de predicción (bracket)
 export interface PredictionData {
     userName: string;
-    // ... otros campos que uses en el bracket
+    // ... otros campos que se usen en el bracket
 }
 
 /**
@@ -57,9 +57,10 @@ export const exportRankingToPDF = (
         
         // Crear tabla
         autoTable(doc, {
-            startY: 45,
+            startY: 40,
+            // tableWidth: 'wrap',  // ← Agregar esta línea
             head: [
-                ['Posición', 'Usuario', 'R32', 'R16', 'QF', 'SF', 'Final', 'Campeón', 'Total']
+                ['Posición', 'Usuario', 'GRUPOS', '16avos', 'OCTAVOS', 'CUARTOS', 'SEMIS', 'Campeón', 'Total']
             ],
             body: tableData,
             theme: 'striped',
@@ -67,34 +68,26 @@ export const exportRankingToPDF = (
                 fillColor: [41, 128, 185], // Azul
                 textColor: 255
             },
-            // styles: {
-            //     fontSize: 9,
-            //     cellPadding: 3
-            // },
             styles: {
         fontSize: 8, // Reducir tamaño de fuente
         cellPadding: 2, // Reducir padding
         overflow: 'linebreak' // Ajustar texto largo
     },
-            // columnStyles: {
-            //     0: { cellWidth: 20 }, // Posición
-            //     1: { cellWidth: 25 }, // Usuario
-            //     8: { fontStyle: 'bold' } // Total
-            // },
+
             columnStyles: {
-        0: { cellWidth: 15 }, // Posición (más angosto)
+        0: { cellWidth: 20 }, // Posición (más angosto)
         1: { cellWidth: 20 }, // Usuario
-        2: { cellWidth: 12 }, // R32
-        3: { cellWidth: 12 }, // R16
-        4: { cellWidth: 12 }, // QF
-        5: { cellWidth: 12 }, // SF
-        6: { cellWidth: 12 }, // Final
-        7: { cellWidth: 15 }, // Campeón
+        2: { cellWidth: 18 }, // R32   GRUPOS
+        3: { cellWidth: 18 }, // R16   DIECISEISAVOS
+        4: { cellWidth: 18 }, // QF   OCTAVOS
+        5: { cellWidth: 18 }, // SF   CUARTOS
+        6: { cellWidth: 14 }, // Final SEMIS
+        7: { cellWidth: 18 }, // Campeón
         8: { cellWidth: 15, fontStyle: 'bold' } // Total
     },
-        // AGREGA para forzar una sola página si es posible:
-        margin: { top: 45, right: 10, bottom: 20, left: 10 },
-        pageBreak: 'avoid', // Evitar saltos de página
+        // AGREGAR para forzar una sola página si es posible:
+        margin: {  right: 10, bottom: 20, left: 20 },
+        pageBreak: 'auto', // Evitar saltos de página
         didDrawPage: function (data: any) {
                 // Pie de página
                 doc.setFontSize(9);
@@ -122,64 +115,84 @@ export const exportRankingToPDF = (
     }
 };
 
-/**
- * Exporta predicción individual (bracket) a PDF
- * Necesita html2canvas para capturar el elemento DOM
- */
+
 export const exportPredictionToPDF = async (
     element: HTMLElement,
     predictionData: PredictionData,
-    html2canvas: any // Pasar html2canvas como dependencia
+    html2canvas: any
 ): Promise<void> => {
     try {
         if (!element) {
             throw new Error('Elemento no encontrado para capturar');
         }
+
+        // Guardar estilos originales
+        const originalWidth = element.style.width;
+        const originalHeight = element.style.height;
         
-        // 1. Capturar el bracket como imagen
+        // Agrandar temporalmente
+        element.style.width = '1600px';
+        element.style.height = 'auto';
+        element.classList.remove('hidden');
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Capturar
         const canvas = await html2canvas(element, {
-            scale: 2,
+            scale: 2.5,
             useCORS: true,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            logging: false
         });
-        
-        // 2. Crear PDF
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('landscape', 'mm', 'a4');
+
+        // Restaurar
+        element.style.width = originalWidth;
+        element.style.height = originalHeight;
+        element.classList.add('hidden');
+
+        // Crear PDF
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4'
+        });
+
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
         
-        // 3. Calcular dimensiones
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
-        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95;
         
-        // 4. Agregar imagen al PDF
-        pdf.addImage(
-            imgData, 
-            'PNG', 
-            (pdfWidth - imgWidth * ratio) / 2,
-            (pdfHeight - imgHeight * ratio) / 2,
-            imgWidth * ratio,
-            imgHeight * ratio
-        );
+        // Calcular escala para ancho completo
+        const widthScale = pdfWidth / imgWidth;
+        const totalHeight = imgHeight * widthScale;
         
-        // 5. Agregar metadata
-        pdf.setProperties({
-            title: `Quiniela Mundial 2026 - ${predictionData.userName}`,
-            subject: 'Predicción Mundial FIFA 2026',
-            author: 'Quiniela Mundial 2026'
-        });
+        // Si es más alto que una página, usar múltiples páginas
+        let yPosition = 0;
+        let remainingHeight = totalHeight;
+        let firstPage = true;
         
-        // 6. Descargar
-        pdf.save(`quiniela-${predictionData.userName}-${new Date().getTime()}.pdf`);
-        
+        while (remainingHeight > 0) {
+            if (!firstPage) {
+                pdf.addPage();
+            }
+            
+            const currentY = -yPosition * widthScale;
+            pdf.addImage(imgData, 'JPEG', 0, currentY, pdfWidth, totalHeight);
+            
+            yPosition += pdfHeight / widthScale;
+            remainingHeight -= pdfHeight;
+            firstPage = false;
+        }
+
+        pdf.save(`quiniela-${predictionData.userName}-${Date.now()}.pdf`);
+
     } catch (error) {
-        console.error('Error generando PDF de predicción:', error);
-        throw new Error('Error al generar el PDF de la predicción');
+        console.error('Error generando PDF:', error);
+        throw error;
     }
 };
-
 /**
  * Exporta datos simples a PDF (versión simplificada)
  */

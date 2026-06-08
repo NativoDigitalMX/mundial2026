@@ -339,7 +339,7 @@ const AdminRanking: React.FC = () => {
 
                             {/* BODY - Fases como filas */}
                             <TableBody>
-                                {/* Fila: Ronda de 32 */}
+                                {/* Fila: Ronda de 32 - Grupos */}
                                 <TableRow hover>
                                     <TableCell
                                         component="th"
@@ -355,7 +355,7 @@ const AdminRanking: React.FC = () => {
                                             maxWidth: 150
                                         }}
                                     >
-                                        🏆 Ronda de 32
+                                        🏆 Grupos
                                     </TableCell>
                                     {filteredPredictions.map((pred) => (
                                         <TableCell
@@ -379,7 +379,7 @@ const AdminRanking: React.FC = () => {
                                     ))}
                                 </TableRow>
 
-                                {/* Fila: Octavos */}
+                                {/* Fila: Octavos  16avos */}
                                 <TableRow hover>
                                     <TableCell
                                         component="th"
@@ -395,7 +395,7 @@ const AdminRanking: React.FC = () => {
                                             maxWidth: 150
                                         }}
                                     >
-                                        ⚽ Octavos
+                                        ⚽ Dieciseisavos
                                     </TableCell>
                                     {filteredPredictions.map((pred) => (
                                         <TableCell
@@ -435,7 +435,7 @@ const AdminRanking: React.FC = () => {
                                             maxWidth: 150
                                         }}
                                     >
-                                        🎯 Cuartos
+                                        🎯 Octavos
                                     </TableCell>
                                     {filteredPredictions.map((pred) => (
                                         <TableCell
@@ -475,7 +475,7 @@ const AdminRanking: React.FC = () => {
                                             maxWidth: 150
                                         }}
                                     >
-                                        🔥 Semifinales
+                                        🔥 Cuartos
                                     </TableCell>
                                     {filteredPredictions.map((pred) => (
                                         <TableCell
@@ -515,7 +515,7 @@ const AdminRanking: React.FC = () => {
                                             maxWidth: 150
                                         }}
                                     >
-                                        🥈 Final
+                                        🥈 Semifinales
                                     </TableCell>
                                     {filteredPredictions.map((pred) => (
                                         <TableCell

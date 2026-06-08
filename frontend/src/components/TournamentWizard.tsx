@@ -165,16 +165,23 @@ const TournamentWizard: React.FC<TournamentWizardProps> = ({ onComplete }) => {
                             champion: convertCodeToTeam(backendPred.knockout_predictions.final.champion),
                             runnerUp: convertCodeToTeam(backendPred.knockout_predictions.final.runnerUp)
                         };
-
+                        // Modificaciones Junio 3 
+                        // Convertir third_place_selections del backend a bestThirdPlaces
+                        const newBestThirdPlaces: Team[] = (backendPred.third_place_selections || []).map((selection: any) => {
+                            return convertCodeToTeam(selection.team_code);
+                        }).filter((team: Team | null): team is Team => team !== null);
+// fin de modificaciones junio 3
                         // Diferir los setState 
                         setTimeout(() => {
                             // Actualizar userName con el nombre del usuario autenticado
                             setUserName(user.full_name || user.user_code);
                             setGroupSelections(newGroupSelections);
                             setKnockoutPredictions(newKnockoutPredictions);
-
+                            // Modificada junio 3:
+                            
+                            setBestThirdPlaces(newBestThirdPlaces);  // 👈 Agrega esta línea
                             // Determinar step actual basado en datos cargados
-                            console.log('Predicción cargada del backend:', backendPred);
+                            
                             if (backendPred.is_completed) setCurrentStep('results');
                             else if (newKnockoutPredictions.final || newKnockoutPredictions.champion) setCurrentStep('final');
                             else if (newKnockoutPredictions.semiFinals?.some(p => p !== null)) setCurrentStep('semiFinals')
@@ -192,6 +199,7 @@ const TournamentWizard: React.FC<TournamentWizardProps> = ({ onComplete }) => {
 
             // SEGUNDO: Cargar de sessionStorage
             const savedPrediction = sessionStorage.getItem('worldCupPrediction');
+           
             if (savedPrediction) {
                 try {
                     const parsed: UserPrediction = JSON.parse(savedPrediction);
@@ -508,6 +516,7 @@ const TournamentWizard: React.FC<TournamentWizardProps> = ({ onComplete }) => {
                     timestamp: Date.now(),
                     completed: true,
                 };
+                // console.log('Predicción final para resultados:', currentPrediction);
 
                 return (
                     <ResultsView
